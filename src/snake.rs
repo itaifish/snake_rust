@@ -12,10 +12,10 @@ pub struct Snake {
 }
 
 impl Snake {
-	pub fn new(x: u32, y: u32) -> Snake {
+	pub fn new(x: i32, y: i32) -> Snake {
 		let mut body: VecDeque<Position> = VecDeque::new();
 		for i in 0..constants::SNAKE_STARTING_LENGTH {
-			body.push_back(Position::new(x - i, y));
+			body.push_back(Position::new(x - i as i32, y));
 		}
 		Snake {
 			body,
@@ -41,15 +41,20 @@ impl Snake {
 		self.body.front_mut().unwrap()
 	}
 
+	pub fn grow(&mut self) {
+		self.body.push_back(self.body.back().unwrap().clone());
+	}
+
 	pub fn render(&mut self, gl: &mut GlGraphics, args: &RenderArgs) {
-		let red: [f32; 4] = [1.0, 0.0, 0.0, 1.0];
+		let green: [f32; 4] = [0.0, 1.0, 0.0, 1.0];
+		let dark_green: [f32; 4] = [0.0, 0.5, 0.0, 1.0];
 		let squares: Vec<Rectangle> = self
 			.body
 			.iter()
 			.map(|position: &Position| {
 				graphics::rectangle::square(
-					(position.x * constants::PIXEL_SIZE as u32).into(),
-					(position.y * constants::PIXEL_SIZE as u32).into(),
+					(position.x * constants::PIXEL_SIZE as i32).into(),
+					(position.y * constants::PIXEL_SIZE as i32).into(),
 					constants::PIXEL_SIZE as f64,
 				)
 			})
@@ -57,8 +62,11 @@ impl Snake {
 
 		gl.draw(args.viewport(), |c, gl| {
 			let transform = c.transform;
-			squares.into_iter().for_each(|square| {
-				graphics::rectangle(red, square, transform, gl);
+			let mut iter = squares.into_iter();
+			let head = iter.next().unwrap();
+			graphics::rectangle(dark_green, head, transform, gl);
+			iter.for_each(|square| {
+				graphics::rectangle(green, square, transform, gl);
 			});
 		});
 	}
