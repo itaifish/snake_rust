@@ -1,5 +1,5 @@
 use crate::constants;
-use crate::util::{Direction, Position};
+use crate::util::{Direction, Position, DIRECTION_KEYS};
 use graphics::types::Rectangle;
 use opengl_graphics::GlGraphics;
 use piston::input::*;
@@ -25,24 +25,24 @@ impl Snake {
 	}
 
 	pub fn update(&mut self) {
-		let mut new_head = self.get_head().clone();
+		let mut new_head = *self.head_mut();
 		match self.dir {
 			Direction::Right => new_head.x += 1,
 			Direction::Left => new_head.x -= 1,
 			Direction::Down => new_head.y += 1,
 			Direction::Up => new_head.y -= 1,
 		}
-		self.last_dir = self.dir.clone();
+		self.last_dir = self.dir;
 		self.body.push_front(new_head);
 		self.body.pop_back();
 	}
 
-	pub fn get_head(&mut self) -> &mut Position {
+	pub fn head_mut(&mut self) -> &mut Position {
 		self.body.front_mut().unwrap()
 	}
 
 	pub fn grow(&mut self) {
-		self.body.push_back(self.body.back().unwrap().clone());
+		self.body.push_back(*self.body.back().unwrap());
 	}
 
 	pub fn render(&mut self, gl: &mut GlGraphics, args: &RenderArgs) {
@@ -72,12 +72,13 @@ impl Snake {
 	}
 
 	pub fn pressed(&mut self, button: &Button) {
-		self.dir = match button {
-			&Button::Keyboard(Key::Up) if self.last_dir != Direction::Down => Direction::Up,
-			&Button::Keyboard(Key::Down) if self.last_dir != Direction::Up => Direction::Down,
-			&Button::Keyboard(Key::Left) if self.last_dir != Direction::Right => Direction::Left,
-			&Button::Keyboard(Key::Right) if self.last_dir != Direction::Left => Direction::Right,
-			&_ => self.last_dir.clone(),
-		}
+		let dir = DIRECTION_KEYS.get(button).unwrap_or(&self.last_dir);
+		self.dir = {
+			if self.last_dir != dir.opposite() {
+				*dir
+			} else {
+				self.last_dir
+			}
+		};
 	}
 }

@@ -1,5 +1,6 @@
 extern crate glutin_window;
 extern crate graphics;
+extern crate lazy_static;
 extern crate opengl_graphics;
 extern crate piston;
 extern crate rand;

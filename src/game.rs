@@ -4,14 +4,14 @@ use crate::util::Position;
 use rand::Rng;
 
 use opengl_graphics::GlGraphics;
-use piston::input::*;
+use piston::input::{Button, RenderArgs};
 use std::{thread, time};
 
 pub struct Game {
 	gl: GlGraphics,
 	snake: snake::Snake,
 	apple: Position,
-	score: i32,
+	score: u32,
 }
 
 impl Game {
@@ -77,18 +77,20 @@ impl Game {
 
 	fn check_collision(&mut self) {
 		// apple collision
-		let head_position = self.snake.get_head().clone();
+		let head_position = *self.snake.head_mut();
 		if head_position == self.apple {
 			self.snake.grow();
 			self.score += 1;
 			self.apple = Game::random_position();
+			return;
 		}
 		// self collision
 		for i in 1..self.snake.body.len() {
-			let pos = self.snake.body.get(i).unwrap();
-			if head_position == *pos {
+			let pos = self.snake.body[i];
+			if head_position == pos {
 				println!("Oops, hit myself");
-				return self.reset();
+				self.reset();
+				return;
 			}
 		}
 		// oob
@@ -98,7 +100,7 @@ impl Game {
 			|| head_position.y >= constants::GAME_SIZE_NUM_PIXELS[1] as i32
 		{
 			println!("Out of bounds");
-			return self.reset();
+			self.reset();
 		}
 	}
 }
